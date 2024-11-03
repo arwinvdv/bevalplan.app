@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Bevalplan generator - Gratis online gebrooteplan maken</title>
+  <meta name="description" content="Maak gratis je eigen bevalplan of geboorteplan online. Personaliseer je wensen voor tijdens de bevalling en exporteer direct als PDF. Gebruiksvriendelijk en zonder registratie.">
+  <meta name="keywords" content="bevalplan, geboorteplan, bevalplan generator, geboorteplan generator, bevalplan maken, geboorteplan maken, bevalplan pdf, geboorteplan pdf, gratis bevalplan, online bevalplan">
+  <meta name="author" content="Bevalplan.app">
+  <meta name="robots" content="index, follow">
+
+  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="images.js"></script>
+  <script src="app.js"></script>
+
+  <!-- Schema.org markup -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Bevalplan Generator",
+      "url": "https://bevalplan.app",
+      "description": "Maak gratis je eigen bevalplan of geboorteplan online. Personaliseer je wensen voor tijdens de bevalling en exporteer direct als PDF.",
+      "applicationCategory": "HealthApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "featureList": [
+        "Personaliseerbaar bevalplan",
+        "PDF export functie",
+        "Geen registratie nodig",
+        "Gratis te gebruiken",
+        "Privacy-vriendelijk"
+      ]
+    }
+  </script>
+  
+  <style>
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    .animate-spin {
+      animation: spin 1s linear infinite;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 p-4 md:p-8">
+<div class="max-w-[210mm] mx-auto flex flex-col min-h-screen" x-data="birthPlan">
+  <div class="bg-teal-50 border-l-4 border-teal-500 p-4 mb-6 rounded-r">
+    <div class="flex">
+      <div class="flex-shrink-0">
+        <svg class="h-5 w-5 text-teal-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+          <path clip-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                fill-rule="evenodd"/>
+        </svg>
+      </div>
+      <div class="ml-3">
+        <p class="text-sm text-teal-700">
+          Maak hieronder je bevalplan door items toe te voegen en teksten aan te passen. Druk op 'PDF Exporteren' om je
+          bevalplan als PDF te downloaden.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white p-4 md:p-8 shadow-lg min-h-[297mm] w-full md:w-[210mm] mx-auto mb-4" id="birthplan">
+    <div class="text-center mb-6 md:mb-8">
+      <input
+        class="text-2xl md:text-4xl font-bold text-center border-none focus:outline-none w-full underline decoration-dashed decoration-slate-300"
+        type="text"
+        x-model="title">
+      <input
+        class="text-lg md:text-xl text-center mt-2 border-none focus:outline-none w-full underline decoration-dashed decoration-slate-300"
+        type="text"
+        x-model="subtitle">
+    </div>
+
+    <div class="flex flex-wrap md:flex-nowrap justify-center md:justify-between mb-8 md:mb-12 gap-4">
+      <template :key="icon.id" x-for="icon in icons">
+        <div class="text-center flex flex-col px-2">
+          <template x-if="icon.src !== ''">
+            <img :src="icon.src"
+                 @click="cycleIconImage(icon)"
+                 class="w-24 h-24 mx-auto object-cover rounded-full cursor-pointer hover:scale-105 transition-transform">
+          </template>
+          <template x-if="icon.src === ''">
+            <div
+              @click="cycleIconImage(icon)"
+              class="w-24 h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center cursor-pointer hover:scale-105 transition-transform">
+            </div>
+          </template>
+          <input class="text-center w-full border-none focus:outline-none text-base" type="text"
+                 x-model="icon.text1">
+          <input class="text-center w-full font-bold border-none focus:outline-none text-base" type="text"
+                 x-model="icon.text2">
+        </div>
+      </template>
+    </div>
+
+    <template :key="category" x-for="category in ['atmosphere', 'labor', 'birth']">
+      <div class="mb-6 md:mb-8" x-show="selectedImages[category].length > 0">
+        <div class="bg-gray-100 p-2 text-center mb-3 md:mb-4 capitalize text-sm md:text-base">
+          <input
+            class="text-center bg-transparent border-none focus:outline-none w-full underline decoration-dashed decoration-slate-300"
+            type="text"
+            x-model="categoryTitles[category]">
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+          <template :key="image.id" x-for="(image, index) in selectedImages[category]">
+            <div class="group">
+              <div class="text-center flex flex-col h-full relative">
+                <div
+                  class="absolute inset-x-0 top-0 bg-white/75 opacity-0 group-hover:opacity-100 transition-opacity duration-200 py-1 flex items-center justify-center gap-2 z-1">
+                  <button
+                    @click="moveImage(category, index, 'up')"
+                    class="control-button"
+                    title="Move left"
+                    x-show="index > 0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                    </svg>
+                  </button>
+                  <button
+                    @click="deleteImage(category, index)"
+                    class="control-button"
+                    title="Delete">
+                    <svg class="w-4 h-4 stroke-red-500" fill="none" viewBox="0 0 24 24">
+                      <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round"
+                            stroke-width="2"></path>
+                    </svg>
+                  </button>
+                  <button
+                    @click="moveImage(category, index, 'down')"
+                    class="control-button"
+                    title="Move right"
+                    x-show="index < selectedImages[category].length - 1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                    </svg>
+                  </button>
+                </div>
+                <img :src="image.src" class="w-full h-24 md:h-32 object-cover rounded">
+                <div class="mt-1 px-1">
+                  <textarea
+                    @input="$el.style.height = ''; $el.style.height = $el.scrollHeight + 'px'"
+                    class="text-xs md:text-sm text-center w-full border-none focus:outline-none resize-none overflow-hidden underline decoration-dashed decoration-slate-300"
+                    rows="1"
+                    style="min-height: 1.5em;"
+                    x-init="$nextTick(() => { $el.style.height = ''; $el.style.height = $el.scrollHeight + 'px' })"
+                    x-model="selectedImages[category][index].customText"
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>
+    <div class="text-center text-gray-500" x-show="Object.values(selectedImages).flat().length === 0">
+      Voeg items toe door op de knop onderaan te klikken.
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="text-center text-sm text-gray-500 space-y-2">
+    <div class="flex items-center justify-center space-x-2">
+      <a class="flex items-center hover:text-gray-700" href="https://github.com/arwinvdv/bevalplan.app"
+         rel="noopener noreferrer"
+         target="_blank">
+        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+          <path
+            d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+        </svg>
+        Open source
+      </a>
+<!--      <div>| Dank aan <a class="underline hover:text-gray-700" href="#"-->
+<!--                         target="_blank">...</a> voor het gebruik van de Icoontjes geboorteplan</div>-->
+      <div>| Statistieken door <a href="https://bevalplan.goatcounter.com/" target="_blank" class="underline hover:text-gray-700">GoatCounter</a></div>
+      <div>| <button @click="showPrivacyModal = true" class="underline hover:text-gray-700">Privacyverklaring</button></div>
+    </div>
+  </div>
+
+
+  <div class="fixed bottom-4 right-4 space-y-2 md:space-y-0 md:space-x-4 flex flex-col md:flex-row">
+    <button @click="showModal = true" class="bg-teal-600 text-white px-3 md:px-4 py-2 rounded text-sm md:text-base">
+      Items toevoegen
+    </button>
+    <button :disabled="isExporting" @click="exportPDF()"
+            class="bg-fuchsia-900 text-white px-3 md:px-4 py-2 rounded text-sm md:text-base relative">
+      <span x-show="!isExporting">PDF Exporteren</span>
+      <div class="flex items-center justify-center" x-show="isExporting">
+        <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                fill="currentColor"></path>
+        </svg>
+        <span class="ml-2">Exporteren...</span>
+      </div>
+    </button>
+  </div>
+
+  <div @click.self="showModal = false"
+       class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4"
+       x-show="showModal">
+    <div class="bg-white p-4 md:p-8 rounded-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto relative">
+      <button @click="showModal = false"
+              class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+        ×
+      </button>
+
+      <div class="flex flex-col md:flex-row gap-4 mb-4 mt-4">
+        <input class="flex-grow p-2 border rounded text-sm md:text-base" placeholder="Zoeken..." type="text"
+               x-model="searchTerm">
+        <select class="w-full md:w-48 p-2 border rounded text-sm md:text-base" x-model="selectedCategory">
+          <option value="">Alle categorieën</option>
+          <option value="atmosphere">Sfeer</option>
+          <option value="labor">Bevalling</option>
+          <option value="birth">Geboorte</option>
+        </select>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
+        <template :key="image.id" x-for="image in filteredImages()">
+          <div :class="{'border-teal-500 border-4': isSelected(image)}"
+               @click="toggleImage(image)"
+               class="cursor-pointer p-2 border rounded hover:shadow-lg">
+            <img :src="image.src" class="w-full h-16 md:h-24 object-cover rounded">
+            <div class="font-bold text-xs md:text-sm mt-2" x-text="image.title"></div>
+            <div class="text-xs text-gray-600 hidden md:block" x-text="image.description"></div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+
+  <!-- Privacy Policy Modal -->
+  <div @click.self="showPrivacyModal = false" x-show="showPrivacyModal"
+       class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white p-6 rounded-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto relative">
+      <button @click="showPrivacyModal = false"
+              class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+
+      <h2 class="text-2xl font-bold mb-4">Privacyverklaring</h2>
+
+      <div class="prose max-w-none">
+        <h3 class="text-xl font-semibold mb-2">1. Algemeen</h3>
+        <p class="mb-4">
+          Deze privacy verklaring legt uit hoe wij omgaan met uw persoonlijke gegevens op bevalplan.app.
+        </p>
+
+        <h3 class="text-xl font-semibold mb-2">2. Gegevensverzameling</h3>
+        <p class="mb-4">
+          Wij verzamelen alleen anonieme gebruiksstatistieken via GoatCounter. Er worden geen persoonlijke gegevens opgeslagen.
+        </p>
+
+        <h3 class="text-xl font-semibold mb-2">3. Gegevensopslag</h3>
+        <p class="mb-4">
+          Alle gegevens die u invoert in het bevalplan worden alleen lokaal in uw browser opgeslagen en in de URL van de pagina. Deze gegevens worden niet naar onze servers verstuurd.
+        </p>
+
+        <h3 class="text-xl font-semibold mb-2">4. Cookies</h3>
+        <p class="mb-4">
+          Deze website gebruikt geen tracking cookies. Alleen functionele cookies die noodzakelijk zijn voor het functioneren van de website kunnen worden gebruikt.
+        </p>
+
+        <h3 class="text-xl font-semibold mb-2">5. Contact</h3>
+        <p class="mb-4">
+          Voor vragen over privacy kunt u contact opnemen via GitHub.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- For stats -->
+<script data-goatcounter="https://bevalplan.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
+

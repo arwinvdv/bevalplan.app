@@ -26,10 +26,8 @@ Dit project is gebouwd met:
 
 ## 🤝 Bijdragen
 
-Bijdragen zijn welkom! Voel je vrij om:
-- Een di aan te maken voor bugs of suggesties
-- Een pull request in te dienen met verbeteringen
-- De documentatie te verbeteren
+Bijdragen zijn welkom! Voel je vrij om een discussie te starten voor bugs of suggesties.
+Uiteraard mag je ook een pull request in dienen met verbeteringen.
 
 ## 📝 Privacy
 
@@ -38,14 +36,14 @@ Bijdragen zijn welkom! Voel je vrij om:
 - Geen account nodig
 - Geen opslag van persoonlijke gegevens
 
+## 🙏 Credits
+
+- Icons gemaakt door [Cardemom](https://cardemom.be/product/icoontjes-geboorteplan-download/) (toestemming verkregen, niet in deze repo inbegrepen)
+
 ## 📄 Licentie
 
 Dit project is gelicenseerd onder de MIT License - zie het [LICENSE](LICENSE) bestand voor details.
 
-## 🙏 Credits
-
-- Icons door ... (niet in deze repo opgenomen)
-
 ## 📧 Contact
 
-Voor vragen of suggesties, open een issue op GitHub.
+Voor vragen of suggesties, open een discussie topic op GitHub.

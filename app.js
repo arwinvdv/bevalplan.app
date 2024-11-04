@@ -55,7 +55,16 @@ document.addEventListener('alpine:init', () => {
               ...icon,
               src: iconSets[icon.id][icon.currentImageIndex || 0]
             }));
-            this.selectedImages = state.selectedImages;
+            //si
+            for (const category in state.si) {
+              this.selectedImages[category] = state.si[category].map(img => {
+                const image = this.images.find(i => i.id === img.id);
+                return {
+                  ...image,
+                  customText: img.customText
+                };
+              });
+            }
             this.categoryTitles = state.categoryTitles;
           } catch (error) {
             console.error('Error loading state:', error);
@@ -64,6 +73,15 @@ document.addEventListener('alpine:init', () => {
       },
 
       saveState() {
+        let selectedImagesMinimized = {};
+        // Save only customText and id for selected images, remove the other properties
+        for (const category in this.selectedImages) {
+          selectedImagesMinimized[category] = this.selectedImages[category].map(img => ({
+            id: img.id,
+            customText: img.customText
+          }));
+        }
+
         const state = {
           title: this.title,
           subtitle: this.subtitle,
@@ -73,7 +91,7 @@ document.addEventListener('alpine:init', () => {
             text2: icon.text2,
             currentImageIndex: icon.currentImageIndex || 0
           })),
-          selectedImages: JSON.parse(JSON.stringify(this.selectedImages)),
+          si: selectedImagesMinimized,
           categoryTitles: this.categoryTitles
         };
         const stateStr = btoa(encodeURIComponent(JSON.stringify(state)));
@@ -133,14 +151,14 @@ document.addEventListener('alpine:init', () => {
           });
 
           const pageWidth = 210;
-          const margin = 20;
+          const margin = 15;
           const contentWidth = pageWidth - (2 * margin);
 
           // Set font sizes
           const titleSize = 24;
           const subtitleSize = 14;
           const categorySize = 12;
-          const textSize = 8;
+          const textSize = 9;
 
           const urlParams = new URLSearchParams(window.location.search);
           const stateStr = urlParams.get('state');
@@ -162,11 +180,11 @@ document.addEventListener('alpine:init', () => {
           pdf.setFontSize(subtitleSize);
           pdf.text(this.subtitle, pageWidth / 2, margin + 7, {align: 'center'});
 
-          let yPosition = margin + 20;
+          let yPosition = margin + 12;
 
           // Add icons section with proper spacing
           const iconsPerRow = 4;
-          const iconWidth = 35;
+          const iconWidth = 45;
           const iconSpacing = (contentWidth - (iconsPerRow * iconWidth)) / (iconsPerRow - 1);
           const iconStartX = margin + 10;
 
@@ -177,14 +195,14 @@ document.addEventListener('alpine:init', () => {
 
             try {
               if (icon.src) {
-                const imgData = await this.getBase64Image(icon.src);
+                const {imgData, aspectRatio} = await this.getImageDataWithAspectRatio(icon.src);
                 pdf.addImage(imgData, 'JPEG', xPos, yPosition, iconWidth / 2, iconWidth / 2, '', 'FAST');
               }
 
               pdf.setFontSize(textSize);
-              pdf.text(icon.text1, xPos + (iconWidth / 4), yPosition + 22, {align: 'center', maxWidth: iconWidth});
+              pdf.text(icon.text1, xPos + (iconWidth / 4), yPosition + 27, {align: 'center', maxWidth: iconWidth});
               pdf.setFont(undefined, 'bold');
-              pdf.text(icon.text2, xPos + (iconWidth / 4), yPosition + 27, {align: 'center', maxWidth: iconWidth});
+              pdf.text(icon.text2, xPos + (iconWidth / 4), yPosition + 32, {align: 'center', maxWidth: iconWidth});
               pdf.setFont(undefined, 'normal');
             } catch (error) {
               console.error('Error loading icon:', error);
@@ -199,31 +217,57 @@ document.addEventListener('alpine:init', () => {
               // Add category title
               pdf.setFontSize(categorySize);
               pdf.setFillColor(240, 240, 240);
-              pdf.rect(margin, yPosition, contentWidth, 8, 'F');
+              // Make rectangle with rounded corners
+              pdf.roundedRect(margin, yPosition, contentWidth, 8, 1, 1, 'F');
               pdf.text(this.categoryTitles[category], pageWidth / 2, yPosition + 6, {align: 'center'});
 
               yPosition += 11;
 
               // Calculate image layout
               const maxImagesPerRow = 5;
-              const imageWidth = 25;
-              const imageSpacing = (contentWidth - (maxImagesPerRow * imageWidth)) / (maxImagesPerRow - 1);
+              const maxDimension = 25;
+              const imageSpacing = (contentWidth - (maxImagesPerRow * maxDimension)) / (maxImagesPerRow - 1);
 
               for (let i = 0; i < this.selectedImages[category].length; i++) {
                 const image = this.selectedImages[category][i];
                 const row = Math.floor(i / maxImagesPerRow);
                 const col = i % maxImagesPerRow;
-                const xPos = margin + (col * (imageWidth + imageSpacing));
-                const currentY = yPosition + (row * 35);
+                const xPos = margin + (col * (maxDimension + imageSpacing));
+                const currentY = yPosition + (row * (maxDimension + 15));
 
                 try {
-                  const imgData = await this.getBase64Image(image.src);
-                  pdf.addImage(imgData, 'JPEG', xPos, currentY, imageWidth, imageWidth, '', 'FAST');
+                  const {imgData, aspectRatio} = await this.getImageDataWithAspectRatio(image.src);
 
+                  // Calculate dimensions while respecting both max width and height
+                  let finalWidth, finalHeight;
+                  if (aspectRatio > 1) {
+                    // Landscape image
+                    finalWidth = maxDimension;
+                    finalHeight = finalWidth / aspectRatio;
+                    if (finalHeight > maxDimension) {
+                      finalHeight = maxDimension;
+                      finalWidth = finalHeight * aspectRatio;
+                    }
+                  } else {
+                    // Portrait image
+                    finalHeight = maxDimension;
+                    finalWidth = finalHeight * aspectRatio;
+                    if (finalWidth > maxDimension) {
+                      finalWidth = maxDimension;
+                      finalHeight = finalWidth / aspectRatio;
+                    }
+                  }
+
+                  // Center the image within its allocated space
+                  const xOffset = (maxDimension - finalWidth) / 2;
+                  const yOffset = (maxDimension - finalHeight) / 2;
+                  pdf.addImage(imgData, 'JPEG', xPos + xOffset, currentY + yOffset, finalWidth, finalHeight, '', 'FAST');
+
+                  // Center text below the image
                   pdf.setFontSize(textSize);
-                  pdf.text(image.customText, xPos + (imageWidth / 2), currentY + 28, {
+                  pdf.text(image.customText || '', xPos + (maxDimension / 2), currentY + maxDimension + 5, {
                     align: 'center',
-                    maxWidth: imageWidth
+                    maxWidth: maxDimension + 2
                   });
                 } catch (error) {
                   console.error('Error loading image:', error);
@@ -231,7 +275,7 @@ document.addEventListener('alpine:init', () => {
               }
 
               const rows = Math.ceil(this.selectedImages[category].length / maxImagesPerRow);
-              yPosition += (rows * 35) + 10;
+              yPosition += (rows * 37) + 3;
             }
           }
 
@@ -243,7 +287,7 @@ document.addEventListener('alpine:init', () => {
           this.isExporting = false;
         }
       },
-      async getBase64Image(url) {
+      async getImageDataWithAspectRatio(url) {
         const img = await this.loadImage(url);
         const canvas = document.createElement('canvas');
         canvas.width = img.width;
@@ -252,7 +296,10 @@ document.addEventListener('alpine:init', () => {
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0);
-        return canvas.toDataURL('image/jpeg');
+        return {
+          imgData: canvas.toDataURL('image/jpeg'),
+          aspectRatio: img.width / img.height
+        };
       },
       async loadImage(url) {
         return new Promise((resolve, reject) => {

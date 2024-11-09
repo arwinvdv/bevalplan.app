@@ -10,6 +10,9 @@
   <meta name="author" content="Bevalplan.app">
   <meta name="robots" content="index, follow">
 
+  <!--  Make sure only this path is send to goatcounter-->
+  <link rel="canonical" href="https://bevalplan.app">
+
   <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="shortcut icon" href="/favicon.ico" />
@@ -127,7 +130,7 @@
                 <div
                   class="absolute inset-x-0 top-0 bg-white/75 opacity-0 group-hover:opacity-100 transition-opacity duration-200 py-1 flex items-center justify-center gap-2 z-1">
                   <button
-                    @click="moveImage(category, index, 'up')"
+                    @click="moveImage(category, index, 'left')"
                     class="control-button"
                     title="Move left"
                     x-show="index > 0">
@@ -145,7 +148,7 @@
                     </svg>
                   </button>
                   <button
-                    @click="moveImage(category, index, 'down')"
+                    @click="moveImage(category, index, 'right')"
                     class="control-button"
                     title="Move right"
                     x-show="index < selectedImages[category].length - 1">
@@ -153,6 +156,29 @@
                       <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
                     </svg>
                   </button>
+<!--                  Add a button with an arrow down or up for changing the category-->
+                  <button
+                    @click="moveImage(category, index, 'up')"
+                    class="control-button"
+                    title="Move up"
+                    x-show="category !== 'atmosphere'">
+<!--                    SHow an svg icon arrow down -->
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M5 11l7-7 7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                    </svg>
+                  </button>
+
+                  <button
+                    @click="moveImage(category, index, 'down')"
+                    class="control-button"
+                    title="Move down"
+                    x-show="category !== 'birth'">
+                    <!--                    SHow an svg icon arrow up -->
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M19 13l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                    </svg>
+                  </button>
+
                 </div>
                 <img :src="image.src" class="w-full h-24 md:h-32 object-contain rounded">
                 <div class="mt-1 px-1">
@@ -173,6 +199,9 @@
     </template>
     <div class="text-center text-gray-500" x-show="Object.values(selectedImages).flat().length === 0">
       Voeg items toe door op de knop onderaan te klikken.
+    </div>
+    <div class="text-center text-red-500" x-show="showToManyImagesWarning">
+      Let op: Er zijn teveel rijen met afbeeldingen. De PDF kan mogelijk niet alle afbeeldingen tonen. Selecteer minder afbeeldingen of verplaats ze naar een andere categorie.
     </div>
   </div>
 

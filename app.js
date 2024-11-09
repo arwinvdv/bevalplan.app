@@ -43,6 +43,11 @@ document.addEventListener('alpine:init', () => {
         });
       },
 
+      get showToManyImagesWarning() {
+        // Show an message if there are more than 4 rows with images (5 images per row)
+        return Object.values(this.selectedImages).reduce((total, images) => total + Math.ceil(images.length / 5), 0) > 5;
+      },
+
       loadState() {
         const urlParams = new URLSearchParams(window.location.search);
         const stateStr = urlParams.get('state');
@@ -112,14 +117,24 @@ document.addEventListener('alpine:init', () => {
       },
 
       moveImage(category, index, direction) {
-        const newIndex = direction === 'up' ? index - 1 : index + 1
+        if (['up', 'down'].includes(direction)) {
+          const newCategory = {
+            up: { atmosphere: 'birth', labor: 'atmosphere', birth: 'labor' },
+            down: { atmosphere: 'labor', labor: 'birth', birth: 'atmosphere' }
+          }[direction][category];
+
+          this.selectedImages[newCategory] = [...this.selectedImages[newCategory], this.selectedImages[category][index]];
+          this.selectedImages[category] = this.selectedImages[category].filter((_, i) => i !== index);
+          this.saveState();
+          return;
+        }
+
+        const newIndex = direction === 'left' ? index - 1 : index + 1;
         if (newIndex >= 0 && newIndex < this.selectedImages[category].length) {
-          const images = [...this.selectedImages[category]]
-          const temp = images[index]
-          images[index] = images[newIndex]
-          images[newIndex] = temp
-          this.selectedImages[category] = images
-          this.saveState()
+          const images = [...this.selectedImages[category]];
+          [images[index], images[newIndex]] = [images[newIndex], images[index]];
+          this.selectedImages[category] = images;
+          this.saveState();
         }
       },
 
